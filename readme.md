@@ -8,6 +8,7 @@
 
 [<img align="center" src="https://img.shields.io/badge/arXiv-2503.10150 HiRAG -b31b1b" />](https://arxiv.org/abs/2503.10150)
 [<img align="center" src="https://img.shields.io/badge/Dataset-TommyChien/UltraDomain -yellow" />](https://huggingface.co/datasets/TommyChien/UltraDomain)
+[<img align="center" src="https://deepwiki.com/badge.svg" />](https://deepwiki.com/hhy-huang/HiRAG)
 
 </div>
 
