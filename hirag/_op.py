@@ -42,7 +42,7 @@ def timer():
     finally:
         end_time = time.perf_counter()
         elapsed_time = end_time - start_time
-        logging.info(f"[Retrieval Time: {elapsed_time:.6f} seconds]")
+        logging.info(f"\033[94m[Retrieval Time: {elapsed_time:.6f} seconds]\033[0m")
 
 
 def chunking_by_token_size(
@@ -310,8 +310,6 @@ async def _merge_edges_then_upsert(
         ),
     )
 
-# TODO:
-# extract entities with normal and attribute entities
 async def extract_hierarchical_entities(
     chunks: dict[str, TextChunkSchema],
     knowledge_graph_inst: BaseGraphStorage,
@@ -357,21 +355,28 @@ async def extract_hierarchical_entities(
         hint_prompt = entity_extract_prompt.format(**context_base_entity, input_text=content)      # fill in the parameter
         final_result = await use_llm_func(hint_prompt)                                      # feed into LLM with the prompt
 
+        # check if need gleaning
         history = pack_user_ass_to_openai_messages(hint_prompt, final_result)               # set as history
-        for now_glean_index in range(entity_extract_max_gleaning):
-            glean_result = await use_llm_func(continue_prompt, history_messages=history)
-
-            history += pack_user_ass_to_openai_messages(continue_prompt, glean_result)      # add to history
-            final_result += glean_result
-            if now_glean_index == entity_extract_max_gleaning - 1:
-                break
-
-            if_loop_result: str = await use_llm_func(                                       # judge if we still need the next iteration
-                if_loop_prompt, history_messages=history
-            )
-            if_loop_result = if_loop_result.strip().strip('"').strip("'").lower()
-            if if_loop_result != "yes":
-                break
+        if_loop_result: str = await use_llm_func(
+            if_loop_prompt, history_messages=history
+        )
+        if_loop_result = if_loop_result.strip().strip('"').strip("'").lower()
+        if if_loop_result == "yes":
+            logger.info(f"\033[91m[Found Missed Entities, Gleaning {entity_extract_max_gleaning} times]\033[0m")
+            for now_glean_index in range(entity_extract_max_gleaning):
+                glean_result = await use_llm_func(continue_prompt, history_messages=history)
+                history += pack_user_ass_to_openai_messages(continue_prompt, glean_result)      # add to history
+                final_result += glean_result
+                if now_glean_index == entity_extract_max_gleaning - 1:
+                    break
+                if_loop_result: str = await use_llm_func(                                       # judge if we still need the next iteration
+                    if_loop_prompt, history_messages=history
+                )
+                if_loop_result = if_loop_result.strip().strip('"').strip("'").lower()
+                if if_loop_result != "yes":
+                    break
+        else:
+            logger.info(f"\033[92m[No Missed Entities]\033[0m")
 
         records = split_string_by_multi_markers(                                            # split entities from result --> list of entities
             final_result,
@@ -464,21 +469,30 @@ async def extract_hierarchical_entities(
         hint_prompt = relation_extract_prompt.format(**context_base_relation, input_text=content)      # fill in the parameter
         final_result = await use_llm_func(hint_prompt)                                      # feed into LLM with the prompt
 
+        # check if need gleaning
         history = pack_user_ass_to_openai_messages(hint_prompt, final_result)               # set as history
-        for now_glean_index in range(entity_extract_max_gleaning):
-            glean_result = await use_llm_func(continue_prompt, history_messages=history)
+        if_loop_result: str = await use_llm_func(                                       # judge if we still need the next iteration
+            if_loop_prompt, history_messages=history
+        )
+        if_loop_result = if_loop_result.strip().strip('"').strip("'").lower()
+        if if_loop_result == "yes":
+            logger.info(f"\033[91m[Found Missed Relations, Gleaning {entity_extract_max_gleaning} times]\033[0m")
+            for now_glean_index in range(entity_extract_max_gleaning):
+                glean_result = await use_llm_func(continue_prompt, history_messages=history)
 
-            history += pack_user_ass_to_openai_messages(continue_prompt, glean_result)      # add to history
-            final_result += glean_result
-            if now_glean_index == entity_extract_max_gleaning - 1:
-                break
+                history += pack_user_ass_to_openai_messages(continue_prompt, glean_result)      # add to history
+                final_result += glean_result
+                if now_glean_index == entity_extract_max_gleaning - 1:
+                    break
 
-            if_loop_result: str = await use_llm_func(                                       # judge if we still need the next iteration
-                if_loop_prompt, history_messages=history
-            )
-            if_loop_result = if_loop_result.strip().strip('"').strip("'").lower()
-            if if_loop_result != "yes":
-                break
+                if_loop_result: str = await use_llm_func(                                       # judge if we still need the next iteration
+                    if_loop_prompt, history_messages=history
+                )
+                if_loop_result = if_loop_result.strip().strip('"').strip("'").lower()
+                if if_loop_result != "yes":
+                    break
+        else:
+            logger.info(f"\033[92m[No Missed Relations]\033[0m")
 
         records = split_string_by_multi_markers(                                            # split entities from result --> list of entities
             final_result,
@@ -536,7 +550,7 @@ async def extract_hierarchical_entities(
             all_relations[k] = v
     
     # TODO: hierarchical clustering
-    logger.info(f"[Hierarchical Clustering]")
+    logger.info(f"\033[94m[Hierarchical Clustering]\033[0m")
     hierarchical_cluster = Hierarchical_Clustering()
     hierarchical_clustered_entities_relations = await hierarchical_cluster.perform_clustering(entity_vdb=entity_vdb, global_config=global_config, entities=all_entities)
     hierarchical_clustered_entities = [[x for x in y if "entity_name" in x.keys()] for y in hierarchical_clustered_entities_relations]
@@ -620,21 +634,28 @@ async def extract_entities(
         hint_prompt = entity_extract_prompt.format(**context_base, input_text=content)      # fill in the parameter
         final_result = await use_llm_func(hint_prompt)                                      # feed into LLM with the prompt
 
+        # check if need gleaning
         history = pack_user_ass_to_openai_messages(hint_prompt, final_result)               # set as history
-        for now_glean_index in range(entity_extract_max_gleaning):
-            glean_result = await use_llm_func(continue_prompt, history_messages=history)
-
-            history += pack_user_ass_to_openai_messages(continue_prompt, glean_result)      # add to history
-            final_result += glean_result
-            if now_glean_index == entity_extract_max_gleaning - 1:
-                break
-
-            if_loop_result: str = await use_llm_func(                                       # judge if we still need the next iteration
-                if_loop_prompt, history_messages=history
-            )
-            if_loop_result = if_loop_result.strip().strip('"').strip("'").lower()
-            if if_loop_result != "yes":
-                break
+        if_loop_result: str = await use_llm_func(
+            if_loop_prompt, history_messages=history
+        )
+        if_loop_result = if_loop_result.strip().strip('"').strip("'").lower()
+        if if_loop_result == "yes":
+            logger.info(f"\033[91m[Found Missed Entities, Gleaning {entity_extract_max_gleaning} times]\033[0m")
+            for now_glean_index in range(entity_extract_max_gleaning):
+                glean_result = await use_llm_func(continue_prompt, history_messages=history)
+                history += pack_user_ass_to_openai_messages(continue_prompt, glean_result)      # add to history
+                final_result += glean_result
+                if now_glean_index == entity_extract_max_gleaning - 1:
+                    break
+                if_loop_result: str = await use_llm_func(                                       # judge if we still need the next iteration
+                    if_loop_prompt, history_messages=history
+                )
+                if_loop_result = if_loop_result.strip().strip('"').strip("'").lower()
+                if if_loop_result != "yes":
+                    break
+        else:
+            logger.info(f"\033[92m[No Missed Entities]\033[0m")
 
         records = split_string_by_multi_markers(                                            # split entities from result --> list of entities
             final_result,
