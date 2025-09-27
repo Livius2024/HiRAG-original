@@ -46,7 +46,7 @@ async def GLM_embedding(texts: list[str]) -> np.ndarray:
         api_key=GLM_API_KEY,
         base_url=GLM_URL
     ) 
-    embedding = client.embeddings.create(
+    embedding = await client.embeddings.create(
         input=texts,
         model=model_name,
     )
