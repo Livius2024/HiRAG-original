@@ -340,7 +340,7 @@ class HiRAG:
 
             # ---------- extract/summary entity and upsert to graph
             if not self.enable_hierachical_mode:
-                logger.info("[Entity Extraction]...")
+                logger.info("\033[94m[[Entity Extraction]...\033[0m")
                 maybe_new_kg = await self.entity_extraction_func(
                     inserting_chunks,
                     knwoledge_graph_inst=self.chunk_entity_relation_graph,
@@ -348,7 +348,7 @@ class HiRAG:
                     global_config=asdict(self),
                 )
             else:
-                logger.info("[Hierachical Entity Extraction]...")
+                logger.info("\033[94m[Hierachical Entity Extraction]...\033[0m")
                 maybe_new_kg = await self.hierarchical_entity_extraction_func(
                     inserting_chunks,
                     knowledge_graph_inst=self.chunk_entity_relation_graph,
@@ -360,7 +360,7 @@ class HiRAG:
                 return
             self.chunk_entity_relation_graph = maybe_new_kg
             # ---------- update clusterings of graph
-            logger.info("[Community Report]...")
+            logger.info("\033[94m[Community Report]...\033[0m")
             await self.chunk_entity_relation_graph.clustering(
                 self.graph_cluster_algorithm                    # use leiden
             )
