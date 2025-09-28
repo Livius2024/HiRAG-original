@@ -480,12 +480,17 @@ Output:
 
 PROMPTS[
     "entiti_continue_extraction"
-] = """MANY entities were missed in the last extraction.  Add them below using the same format:
+] = """There are entities from the original text were missed in the last extraction. 
+Now please extract all the entities that were missed before. 
+Do not infer or imagine entities that are not explicitly mentioned in the original text.
+Add them below using the same format:
 """
 
 PROMPTS[
     "entiti_if_loop_extraction"
-] = """It appears some entities may have still been missed.  Answer YES | NO if there are still entities that need to be added.
+] = """Double-check if any entities from the original text were missed. 
+Do not infer or imagine entities that are not explicitly mentioned in the original text.
+Answer YES | NO if there are still entities that need to be added.
 """
 
 PROMPTS[
