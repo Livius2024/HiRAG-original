@@ -53,6 +53,23 @@ print(graph_func.query("The question you want to ask?", param=QueryParam(mode="h
 Or if you want to employ HiRAG with DeepSeek, ChatGLM, or other third-party retrieval api, here are the examples in `./hi_Search_deepseek.py`, `./hi_Search_glm.py`, and `./hi_Search_openai.py`. The API keys and the LLM configurations can be set at `./config.yaml`.
 
 
+### Running HiRAG on your own `.txt` document (e.g. *Codul fiscal*)
+
+If you have a local document in plain text format you can index it and run
+hierarchical queries directly from the command line:
+
+```bash
+python hi_Search_txt.py /path/to/Codul_fiscal.txt \
+    --question "Care sunt obligațiile de TVA pentru microîntreprinderi?"
+```
+
+The helper script respects the settings in `config.yaml`, so make sure that
+your API keys (e.g. `OPENAI_API_KEY`) are defined there or exported as
+environment variables. After the first run the indexed data will be stored in
+the working directory defined by the configuration and reused for subsequent
+queries. Use `--force-reindex` if you need to rebuild the index from scratch.
+
+
 ## Evaluation
 
 We take the procedure in Mix dataset as an example.
